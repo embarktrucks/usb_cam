@@ -81,13 +81,10 @@ public:
     return true;
   }
 
-  UsbCamNode() :
-      node_("~")
+  UsbCamNode(image_transport::CameraPublisher image_pub) :
+      node_("~"),
+      image_pub_(image_pub)
   {
-    // advertise the main image topic
-    image_transport::ImageTransport it(node_);
-    image_pub_ = it.advertiseCamera("image_raw", 1);
-
     // grab the parameters
     node_.param("video_device", video_device_name_, std::string("/dev/video0"));
     node_.param("brightness", brightness_, -1); //0-255, -1 "leave alone"
@@ -269,7 +266,11 @@ public:
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "usb_cam");
-  usb_cam::UsbCamNode a;
+  ros::NodeHandle nh;
+  image_transport::ImageTransport it(nh);
+  // advertise the main image topic
+  image_transport::CameraPublisher image_pub = it.advertiseCamera("image_raw", 1);
+  usb_cam::UsbCamNode a(image_pub);
   a.spin();
   return EXIT_SUCCESS;
 }
